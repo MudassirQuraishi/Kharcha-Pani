@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Popup from './Popup'
+import Validation from './Validation'
 import axios from 'axios';
 
 const Signup = ({ switchToLogin, API_BASE_URL }) => {
@@ -8,8 +10,18 @@ const Signup = ({ switchToLogin, API_BASE_URL }) => {
         confirmPassword: '',
         name: '',
     });
-    const [passwordMatchError, setPasswordMatchError] = useState(false);
     const [formErrors, setFormErrors] = useState({});
+    const [serverError, setServerError] = useState('');
+
+    useEffect(() => {
+        let timer;
+        if (serverError) {
+            timer = setTimeout(() => {
+                setServerError('');
+            }, 5000);
+        }
+        return () => clearTimeout(timer);
+    }, [serverError]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -19,7 +31,10 @@ const Signup = ({ switchToLogin, API_BASE_URL }) => {
         });
 
         if (name === 'confirmPassword') {
-            setPasswordMatchError(false);
+            setFormErrors({
+                ...formErrors,
+                confirmPassword: '',
+            });
         }
     };
 
@@ -48,23 +63,29 @@ const Signup = ({ switchToLogin, API_BASE_URL }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setServerError('');
 
         const errors = validateForm();
         if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
             return;
         }
-        setFormErrors({});
-
-        console.log('Signing up with:', formData);
 
         try {
-            const response = axios.post(`${API_BASE_URL}/user/signup`, formData);
-            console.log(response)
-            //switchToLogin();
-        }
-        catch (error) {
-            console.log(error);
+            const userData = {
+                userName: formData.name,
+                userPassword: formData.password,
+                userEmail: formData.email,
+            }
+            const response = await axios.post('http://localhost:3000/user/signup', userData);
+            if (response.status === 409 || response.status === 201) {
+                switchToLogin();
+            }
+        } catch (error) {
+            if (error.response && error.response.status === 500) {
+                setServerError('Server error. Please try again.');
+            }
+            console.log(error)
         }
     };
 
@@ -80,7 +101,7 @@ const Signup = ({ switchToLogin, API_BASE_URL }) => {
                         value={formData.name}
                         onChange={handleInputChange}
                     />
-                    {formErrors.name && <p className="error-message">{formErrors.name}</p>}
+                    {formErrors.name && <Validation data={formErrors.name}></Validation>}
                     <input
                         type="email"
                         className='input-field'
@@ -89,7 +110,7 @@ const Signup = ({ switchToLogin, API_BASE_URL }) => {
                         value={formData.email}
                         onChange={handleInputChange}
                     />
-                    {formErrors.email && <p className="error-message">{formErrors.email}</p>}
+                    {formErrors.email && <Validation data={formErrors.email}></Validation>}
                     <input
                         type="password"
                         className='input-field'
@@ -98,7 +119,7 @@ const Signup = ({ switchToLogin, API_BASE_URL }) => {
                         value={formData.password}
                         onChange={handleInputChange}
                     />
-                    {formErrors.password && <p className="error-message">{formErrors.password}</p>}
+                    {formErrors.password && <Validation data={formErrors.password}></Validation>}
                     <input
                         type="password"
                         className='input-field'
@@ -107,17 +128,19 @@ const Signup = ({ switchToLogin, API_BASE_URL }) => {
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
                     />
-                    {formErrors.confirmPassword && <p className="error-message">{formErrors.confirmPassword}</p>}
-                    {passwordMatchError && <p className="error-message">Passwords do not match!</p>}
+                    {formErrors.confirmPassword && <Validation data={formErrors.confirmPassword}></Validation>}
                     <button type='submit' className='submitButton'>Signup</button>
                 </div>
                 <div>
-                    Already have an account?{' '}
+                    Already have an account?
                     <span className="switch" onClick={switchToLogin}>Login</span>
                     <p></p>
                 </div>
             </form>
-        </div>
+            {serverError && (
+                <Popup error={serverError} ></Popup>
+            )}
+        </div >
     );
 };
 
