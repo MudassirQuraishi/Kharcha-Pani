@@ -3,7 +3,7 @@ import LoginForm from './components/Login';
 import Signup from './components/Signup';
 import Title from './components/Title';
 
-import './App.css'; // Import your CSS file for styling
+import './App.css';
 
 function App() {
   const API_URL = `${import.meta.env.VITE_API_BASE_URL}/${import.meta.env.VITE_API_FORNT_END_PORT}`

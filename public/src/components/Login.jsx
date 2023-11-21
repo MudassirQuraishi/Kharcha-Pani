@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 const LoginForm = ({ switchToSignup, API_BASE_URL }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({
+        email: '',
+        password: '',
+    })
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -27,7 +31,7 @@ const LoginForm = ({ switchToSignup, API_BASE_URL }) => {
                 minLength="6"
                 required
             />
-            <button type="submit">Login</button>
+            <button type="submit" className='submit-button'>Login</button>
             <p>
                 Don't have an account?{' '}
                 <span className="switch" onClick={switchToSignup}>Signup</span>
